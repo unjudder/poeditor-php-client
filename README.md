@@ -1,4 +1,4 @@
-# unjudder/poeditor-api
+# unjudder/poeditor-api-client
 
 Poeditor API Client Module written in PHP.
 
@@ -11,6 +11,51 @@ Poeditor API Client Module written in PHP.
 ## Overview
 
 API Client Interface for [Poeditor API](https://poeditor.com).
+
+## Installation
+
+Use [Composer](http://getcomposer.org) to install the Poeditor Api Client.
+Add the following lines to your `composer.json` file.
+
+```json
+   "require": {
+       "unjudder/mail": "1.0-alpha"
+   }
+```
+
+## Try It out
+
+```php
+
+use Uj\Poed\Api\Client;
+
+$apiClient = new Client("YOUR API ACCESS TOKEN");
+
+// list all projects
+// returns Uj\Poed\Entity\Project[]
+$apiClient->getProjects();
+
+// return a specific project
+// returns Uj\Poed\Entity\Project
+$project = $apiClient->getProject($projectID);
+
+// add a language to the project
+$project->addLanguage('en');
+
+// deletes the given language
+$project->deleteLanguage('en');
+
+// list all terms
+// returns \Uj\Poed\Entity\Term[]
+$project->getTerms();
+
+// list all definitions
+// returns \Uj\Poed\Entity\Definition[]
+$project->getDefinitions($languageCode);
+
+
+```
+
 
 ## License
 
