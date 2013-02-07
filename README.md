@@ -19,7 +19,7 @@ Add the following lines to your `composer.json` file.
 
 ```json
    "require": {
-       "unjudder/mail": "1.0-alpha"
+       "unjudder/poeditor-api-client": "1.0-alpha"
    }
 ```
 
