@@ -112,9 +112,9 @@ class Client
 	{
 		$params = new Parameters(array('action' => 'list_projects'));
 		$response = $this->_doRequest($params);
-
-		return array_map(function($project) {
-			return new Project($project);
+		$apiClient = $this;
+		return array_map(function($project) use ($apiClient) {
+			return new Project($project, $apiClient);
 		}, $response['list']);
 	}
 
@@ -126,7 +126,7 @@ class Client
 		));
 		$response = $this->_doRequest($params);
 
-		return new Project($response['item']);
+		return new Project($response['item'], $this);
 	}
 
 	public function getProjectLanguages($projectId)

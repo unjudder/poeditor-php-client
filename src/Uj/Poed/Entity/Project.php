@@ -94,4 +94,32 @@ class Project extends AbstractEntity
 	{
 		$this->created = $created;
 	}
+
+	public function addLanguage($languageCode)
+	{
+		$this->assertApiClientIsReferenced();
+
+		return $this->apiClient->addProjectLanguage($this->id, $languageCode);
+	}
+
+	public function deleteLanguage($languageCode)
+	{
+		$this->assertApiClientIsReferenced();
+
+		return $this->apiClient->deleteProjectLanguage($this->id, $languageCode);
+	}
+
+	public function getTerms()
+	{
+		$this->assertApiClientIsReferenced();
+
+		return $this->apiClient->getProjectTerms($this->id);
+	}
+
+	public function getDefinitions($languageCode)
+	{
+		$this->assertApiClientIsReferenced();
+	
+		return $this->apiClient->getProjectLanguageDefinitions($this->id, $languageCode);
+	}
 }

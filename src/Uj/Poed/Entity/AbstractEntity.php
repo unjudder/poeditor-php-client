@@ -9,12 +9,22 @@
  */
 namespace Uj\Poed\Entity;
 
+use Uj\Poed\Api\Client;
+
 abstract class AbstractEntity
 {
-	public function __construct(array $data = null)
+	/**
+	 * @var Client
+	 */
+	protected $apiClient;
+
+	public function __construct(array $data = null, Client $apiClient = null)
 	{
 		if ($data !== null) {
 			$this->importData($data);
+		}
+		if ($apiClient !== null) {
+			$this->setApiClient($apiClient);
 		}
 	}
 
@@ -29,6 +39,23 @@ abstract class AbstractEntity
 	public static function fromArray(array $data)
 	{
 		return new static($data);
+	}
+
+	public function assertApiClientIsReferenced()
+	{
+		if ($this->apiClient === null) {
+			throw new \Exception('No Api Client is referenced for this entity.');
+		}
+	}
+
+	public function setApiClient(Client $apiClient)
+	{
+		$this->apiClient = $apiClient;
+	}
+
+	public function getApiClient()
+	{
+		return $this->apiClient;
 	}
 
 	public function toArray()
