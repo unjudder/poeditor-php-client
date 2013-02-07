@@ -5,7 +5,7 @@
  * @link http://github.com/unjudder/poeditor-php-client for the canonical source repository
  * @copyright Copyright (c) 2013 unjudder
  * @license http://unjudder.com/license/new-bsd New BSD License
- * @package Uj\Poed\Api
+ * @package Uj\Poed
  */
 namespace Uj\Poed\Api;
 
@@ -15,11 +15,24 @@ use Zend\Http\Response as HttpResponse;
 use Zend\Stdlib\ParametersInterface;
 use Zend\Stdlib\Parameters;
 
+use Uj\Poed\Api\TermsAddedResponse;
+
 use Uj\Poed\Entity\Project;
+use Uj\Poed\Entity\Term;
+use Uj\Poed\Entity\Definition;
 
 class Client
 {
 	const API_URI = 'http://poeditor.com/api/';
+
+	const FORMAT_PO = 'po';
+	const FORMAT_POT = 'pot';
+	const FORMAT_MO = 'mo';
+	const FORMAT_XLS = 'xls';
+	const FORMAT_APPLE_STRINGS = 'apple_strings';
+	const FORMAT_ANDROID_STRINGS = 'android_strings';
+	const FORMAT_RESX = 'resx';
+	const FORMAT_PROPERTIES = 'properties';
 
 	/**
 	 * @var string
@@ -95,7 +108,7 @@ class Client
 		}
 	}
 
-	public function listProjects()
+	public function getProjects()
 	{
 		$params = new Parameters(array('action' => 'list_projects'));
 		$response = $this->_doRequest($params);
@@ -103,5 +116,121 @@ class Client
 		return array_map(function($project) {
 			return new Project($project);
 		}, $response['list']);
+	}
+
+	public function getProject($projectId)
+	{
+		$params = new Parameters(array(
+			'action' => 'view_project',
+			'id' => $projectId
+		));
+		$response = $this->_doRequest($params);
+
+		return new Project($response['item']);
+	}
+
+	public function getProjectLanguages($projectId)
+	{
+		$params = new Parameters(array(
+			'action' => 'list_languages',
+			'id' => $projectId
+		));
+		$response = $this->_doRequest($params);
+		
+		return $response['list'];
+	}
+
+	public function addProjectLanguage($projectId, $languageCode, &$message = null)
+	{
+		$params = new Parameters(array(
+			'action' => 'add_language',
+			'id' => $projectId,
+			'language' => $languageCode
+		));
+		$response = $this->_doRequest($params);
+		$message = $response['response']['message'];
+
+		return $response['response']['status'] === 'success';
+	}
+
+	public function deleteProjectLanguage($projectId, $languageCode, &$message = null)
+	{
+		$params = new Parameters(array(
+			'action' => 'delete_language',
+			'id' => $projectId,
+			'language' => $languageCode
+		));
+		$response = $this->_doRequest($params);
+		$message = $response['response']['message'];
+	
+		return $response['response']['status'] === 'success';
+	}
+
+	public function getProjectTerms($projectId)
+	{
+		$params = new Parameters(array(
+			'action' => 'view_terms',
+			'id' => $projectId
+		));
+		$response = $this->_doRequest($params);
+
+		return array_map(function ($term) {
+			return new Term($term);
+		}, $response['list']);
+	}
+
+	public function getProjectLanguageDefinitions($projectId, $languageCode)
+	{
+		$params = new Parameters(array(
+			'action' => 'view_terms',
+			'id' => $projectId,
+			'language' => $languageCode
+		));
+		$response = $this->_doRequest($params);
+		
+		return array_map(function($data) {
+			$definition = new Definition($data['definition']);
+			unset($data['definition']);
+			$definition->setTerm(new Term($data));
+			return $definition;
+		}, $response['list']);
+	}
+
+	public function addProjectTerms($projectId, array $terms)
+	{
+		$params = new Parameters(array(
+			'action' => 'add_terms',
+			'id' => $projectId,
+			'data' => json_encode(array_map(function (Term $term) {
+				return $term->toArray();
+			}, $terms))
+		));
+		$response = $this->_doRequest($params);
+		return new TermsAddedResponse($response['details']);
+	}
+
+	public function syncProjectTerms($projectId, array $terms)
+	{
+		$params = new Parameters(array(
+			'action' => 'sync_terms',
+			'id' => $projectId,
+			'data' => json_encode(array_map(function (Term $term) {
+				return $term->toArray();
+			}, $terms))
+		));
+		$response = $this->_doRequest($params);
+		return new TermsSynchronizedResponse($response['details']);
+	}
+
+	public function exportProjectLanguage($projectId, $languageCode, $format = self::FORMAT_MO)
+	{
+		$params = new Parameters(array(
+			'action' => 'export',
+			'id' => $projectId,
+			'language' => $languageCode,
+			'type' => $format
+		));
+		$response = $this->_doRequest($params);
+		return $response;
 	}
 }
