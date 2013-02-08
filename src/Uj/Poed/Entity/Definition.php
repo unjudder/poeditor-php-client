@@ -73,4 +73,15 @@ class Definition extends AbstractEntity
 	{
 		$this->fuzzy = $fuzzy;
 	}
+
+	public function toArray()
+	{
+	    return array(
+	        'term' => $this->term->toArray(),
+	        'definition' => array(
+	            'forms' => array($this->form),
+	            'fuzzy' => $this->fuzzy
+	        )
+        );
+	}
 }
