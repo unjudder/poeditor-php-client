@@ -17,6 +17,7 @@ use Zend\Stdlib\Parameters;
 use Uj\Poed\Api\TermsAddedResponse;
 use Uj\Poed\Api\TermsSynchronizedResponse;
 use Uj\Poed\Api\DefinitionsUpdatedResponse;
+use Uj\Poed\Api\UploadResponse;
 use Uj\Poed\Entity\Project;
 use Uj\Poed\Entity\Term;
 use Uj\Poed\Entity\Export;
@@ -42,6 +43,9 @@ class Client
 
     const FORMAT_PROPERTIES = 'properties';
 
+    const UPDATE_TERMS = 0x01;
+    const UPDATE_DEFINITIONS = 0x02;
+
     /**
      *
      * @var string
@@ -53,6 +57,11 @@ class Client
      * @var HttpClient
      */
     protected $httpClient = null;
+
+    protected $httpClientConfig = array(
+        'ssltransport' => 'sslv3',
+        'sslverifypeer' => false
+    );
 
     public function __construct ($authToken, HttpClient $httpClient = null)
     {
@@ -70,9 +79,10 @@ class Client
     public function getHttpClient ()
     {
         if ($this->httpClient === null) {
-            $this->httpClient = new HttpClient();
+            $this->httpClient = new HttpClient;
+            $this->httpClient->setOptions($this->httpClientConfig);
         }
-        
+
         return $this->httpClient;
     }
 
@@ -90,13 +100,19 @@ class Client
         $request = new HttpRequest();
         $request->setUri(self::API_URI);
         $request->setMethod(HttpRequest::METHOD_POST);
+        $this->getHttpClient()->setRequest($request);
+
         $post = clone $params;
+        if (isset($post['file'])) {
+            $this->getHttpClient()->setFileUpload($post['file'], 'file');
+            $post->offsetUnset('file');
+        } else {
+            $request->getHeaders()->addHeaderLine('Content-Type', HttpClient::ENC_URLENCODED);
+        }
         $post->set('api_token', $this->authToken);
         $request->setPost($post);
-        $request->getHeaders()->addHeaderLine('Content-Type', HttpClient::ENC_URLENCODED);
-        
-        return $this->_handleResponse($this->getHttpClient()
-            ->send($request));
+
+        return $this->_handleResponse($this->getHttpClient()->send());
     }
 
     protected function _handleResponse (HttpResponse $response)
@@ -268,6 +284,7 @@ class Client
         $request->setUri($export->getUri());
         $response = $this->getHttpClient()
             ->setStream($destination)->send($request);
+        $this->getHttpClient()->setStream(false);
 
         return $response;
     }
@@ -276,5 +293,31 @@ class Client
     {
         $export = $this->exportProjectLanguage($projectId, $languageCode, $format);
         return $this->download($export, $destination);
+    }
+
+    public function upload($projectId, $file, $updateType = self::UPDATE_TERMS, $languageCode = null, $overwrite = false, $syncTerms = false)
+    {
+        $updating = null;
+        if($updateType & self::UPDATE_TERMS) {
+            $updating = 'terms';
+        }
+        if($updateType & self::UPDATE_DEFINITIONS) {
+            if ($updating === null) {
+                $updating = 'definitions';
+            } else {
+                $updating .= '_definitions';
+            }
+        }
+        $params = new Parameters(array(
+            'action' => 'upload',
+            'id' => $projectId,
+            'file' => $file,
+            'language' => $languageCode,
+            'updating' => $updating,
+            'overwrite' => $overwrite === true ? 1 : 0,
+            'sync_terms' => $syncTerms === true ? 1 : 0
+        ));
+        $response = $this->_doRequest($params);
+        return new UploadResponse($response['details']);
     }
 }
