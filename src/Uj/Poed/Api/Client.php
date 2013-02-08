@@ -23,7 +23,7 @@ use Uj\Poed\Entity\Definition;
 
 class Client
 {
-	const API_URI = 'http://poeditor.com/api/';
+	const API_URI = 'https://poeditor.com/api/';
 
 	const FORMAT_PO = 'po';
 	const FORMAT_POT = 'pot';
