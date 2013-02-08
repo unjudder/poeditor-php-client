@@ -4,7 +4,7 @@ Poeditor API Client Module written in PHP.
 
    `#`          | `Uj\Poed\Api\Client`
 ----------------|----------
-**Version**     | 1.0-alpha
+**Version**     | dev-master
 **Authors**     | <ul><li>Alrik Zachert <alrik.zachert@unjudder.com></li></ul>
 **License**     | [BSD-3-Clause](https://github.com/unjudder/poeditor-php-client/blob/master/LICENSE.md License)
 
@@ -19,7 +19,7 @@ Add the following lines to your `composer.json` file.
 
 ```json
    "require": {
-       "unjudder/poeditor-api-client": "1.0-alpha"
+       "unjudder/poeditor-api-client": "dev-master"
    }
 ```
 
